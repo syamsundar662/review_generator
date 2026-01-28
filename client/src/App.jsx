@@ -123,8 +123,15 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate report');
+        let errorMessage = 'Failed to generate report';
+        try {
+          const text = await response.text();
+          const data = JSON.parse(text);
+          if (data && typeof data.error === 'string') errorMessage = data.error;
+        } catch (_) {
+          if (response.status === 404) errorMessage = 'API not available. If deployed, ensure /api routes are configured.';
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
